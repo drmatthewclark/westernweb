@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<script>
+
+  if (sessionStorage.getItem("messageString") === null) {
+      sessionStorage.setItem("messageString", "");
+  }
+
+  if (!!window.EventSource) {
+    console.log('start script' );
+    let source = new EventSource('/events')
+
+    source.onmessage = function(event) {
+        let vf = document.getElementById('displaytext');
+        let data = event.data.toUpperCase();
+        console.log('onmessage  got >' + data + '<'  ) ;
+        let messageString = sessionStorage.getItem("messageString") + " " +  data;
+        sessionStorage.setItem("messageString", messageString);
+        vf.value = messageString;
+    }
+
+  } else {
+    console.log("Your browser doesn't support SSE")
+  }
+</script>
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preload" href="fonts/TelegHPLHS.otf" as="font" type="font/otf" crossorigin>
+    <link rel="stylesheet"  href="style.css" >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="30">
+    <title>Telegraph Office</title>
+</head>
+
+<body>
+   <div class="head"> 
+     <!-- <object data="header.svg" type="image/svg+xml"  text-align="center"></object> -->
+     <img src="header.png"  text-align="center">
+   </div>
+
+    <!-- The form sends a POST request to the /submit-form route -->
+    <form class="container" id="selectform" action="/submit-form" method="POST">
+         <label for="destination">Choose destinations (hold Ctrl/Cmd to select multiple):</label>
+         <select name="destination" id="destination" multiple>
+           <option value="127.0.0.1" selected="true">Local line</option>
+           <option value="192.168.20.127">Philadelphia station</option>
+           <option value="71.225.110.58">Wayne station</option>
+        </select>
+        <label for="textField">Enter Text:</label>
+        <input type="text" id="textField" name="textField" required>
+        <button type="submit">Send Message</button>
+    </form>
+
+    <form id="messageform" >
+        <label for="name">Telegraph Message</label>
+        <textarea rows = "5" id="displaytext" name="textvalue" readonly ></textarea>
+    </form>
+
+</body>  
+</html>
