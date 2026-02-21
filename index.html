@@ -41,6 +41,10 @@
      <!-- <object data="header.svg" type="image/svg+xml"  text-align="center"></object> -->
      <img src="header.png"  text-align="center">
    </div>
+    <form id="messageform" >
+        <label for="name">Telegraph Message</label>
+        <textarea rows = "5" id="displaytext" name="textvalue" readonly ></textarea>
+    </form>
 
     <!-- The form sends a POST request to the /submit-form route -->
     <form class="container" id="selectform" action="/submit-form" method="POST">
@@ -53,11 +57,6 @@
         <label for="textField">Enter Text:</label>
         <input type="text" id="textField" name="textField" required>
         <button type="submit">Send Message</button>
-    </form>
-
-    <form id="messageform" >
-        <label for="name">Telegraph Message</label>
-        <textarea rows = "5" id="displaytext" name="textvalue" readonly ></textarea>
     </form>
 
 </body>  
