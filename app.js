@@ -173,6 +173,7 @@ app.post('/submit-form', (req, res) => {
 run_t().catch(console.error);
 run_i().catch(console.error);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+server.keepAliveTimeout = 60 * 1000 + 500;
