@@ -25,7 +25,6 @@
   }
 </script>
 
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,23 +37,25 @@
 
 <body>
    <div class="head"> 
-     <!-- <object data="header.svg" type="image/svg+xml"  text-align="center"></object> -->
      <img src="header.png"  text-align="center">
    </div>
+
     <form id="messageform" >
-        <label for="name">Telegraph Message</label>
+        <label for="name" style="font-family: Telegram HPLHS" >Telegraph Message</label>
         <textarea rows = "5" id="displaytext" name="textvalue" readonly ></textarea>
     </form>
 
     <!-- The form sends a POST request to the /submit-form route -->
     <form class="container" id="selectform" action="/submit-form" method="POST">
          <label for="destination">Choose destinations (hold Ctrl/Cmd to select multiple):</label>
-         <select name="destination" id="destination" multiple>
+         <select class="select" name="destination" id="destination" size=3 multiple>
            <option value="127.0.0.1" selected="true">Local line</option>
-           <option value="192.168.20.127">Philadelphia station</option>
+           <option value="73.233.36.90">Philadelphia station</option>
+           <option value="192.168.20.127">Study</option>
            <option value="71.225.110.58">Wayne station</option>
         </select>
-        <label for="textField">Enter Text:</label>
+
+        <label for="textField" style="font-family: Telegram HPLHS"><br>Enter Text:</label>
         <input type="text" id="textField" name="textField" required>
         <button type="submit">Send Message</button>
     </form>
