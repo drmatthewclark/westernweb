@@ -15,6 +15,8 @@
         let vf = document.getElementById('displaytext');
         let data = event.data.toUpperCase();
         console.log('onmessage  got >' + data + '<'  ) ;
+        if (data === "AA") { data = "\n" };
+        data = data.replaceAll(" AA ", "\n" );
         let messageString = sessionStorage.getItem("messageString") + " " +  data;
         sessionStorage.setItem("messageString", messageString);
         vf.value = messageString;
@@ -42,7 +44,7 @@
 
     <form id="messageform" >
         <label for="name" style="font-family: Telegram HPLHS" >Telegraph Message</label>
-        <textarea rows = "5" id="displaytext" name="textvalue" readonly ></textarea>
+        <textarea rows = "10" id="displaytext" name="textvalue" readonly ></textarea>
     </form>
 
     <!-- The form sends a POST request to the /submit-form route -->
