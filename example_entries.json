@@ -1,0 +1,6 @@
+[
+{"address": "127.0.0.1", "label": "local" }, 
+{"address": "192.168.20.127", "label": "Philadelphia station" },
+{"address": "192.168.20.24", "label": "Relay station" },
+{"address": "71.225.110.58", "label": "Wayne station" }
+]
