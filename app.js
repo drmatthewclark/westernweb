@@ -1,3 +1,5 @@
+const winston = require('winston');
+require('winston-syslog');
 const express = require('express');
 const path = require('path');
 const mqtt = require('async-mqtt');
@@ -14,6 +16,23 @@ app.use(cors());
 var counter = 0
 var currentdata = ' ';
 var newdataflag = false;
+var timestampinterval = 5 * 60 * 1000; // interval between stamps
+var lasttimestamp = new Date() - timestampinterval*2; // set so it has expired
+
+const logger = winston.createLogger({
+  level: 'info', // Set default logging level
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.simple()
+    }),
+    new winston.transports.Syslog({
+      protocol: 'unix',   // use 'tcp' or 'udp'
+      path: '/dev/log',  // for local logging on Unix-based systems
+      app_name: 'telegraph-app.js', // application name for log identification
+      format: winston.format.printf(info => `${info.message}`) // simple message format
+    })
+  ]
+});
 
 
 function makemsg( msg ) {
@@ -21,22 +40,44 @@ function makemsg( msg ) {
 };
 
 
+function timestamp() {
+    var now = new Date();
+    tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    hrs = ("0" + (now.getHours() )).slice(-2); 
+    mins = ("0" + (now.getMinutes() )).slice(-2) ;
+    var result = hrs + ":" + mins  + "UTC" + now.getTimezoneOffset() ; //+ tz;
+    return result.trim();
+}
+
+
 
 app.get('/events', function(req, res) {
 
-   console.log('app.get/events invoked ', counter );
    res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
     'Connection': 'keep-alive'
     });
 
+    function check() {
+       let now = new Date();
+       if ( (now - lasttimestamp) > timestampinterval ) {
+           res.write( makemsg( 'AA' ) );   // newline prosign
+           res.write( makemsg( timestamp() ) );
+           lasttimestamp = now;
+       }
+    };
+
     const resloop = () => {
       if (newdataflag) {
         counter = counter + 1
-        finalmsg = makemsg( currentdata );
-        console.log("app2 loop writing  \"" + currentdata + "\" msg count " + counter );
-        res.write(finalmsg);
+        if ( currentdata.trim() !== "" ) {
+           check();
+           finalmsg = makemsg( currentdata );
+           logger.info("app2 loop write to client >" + currentdata + "<  msg count: " + counter );
+           res.write(finalmsg);
+           lasttimestamp = new Date();
+        }
         currentdata = '';
         newdataflag = false;
         }
@@ -47,18 +88,19 @@ app.get('/events', function(req, res) {
       }, 500 );
 
 
+     
      // Handle client disconnection
      req.on('close', () => {
         clearInterval(interval);
         res.end();
-        console.log('Client disconnected, cleaning up resources.');
      });
 
-     console.log('loop ended', counter );
-     if (currentdata != "") {
+     if (currentdata.trim() !== "") {
         finalmsg = makemsg( currentdata );
-        console.log( "app2.get final " +  finalmsg );
+        logger.info( "app2.get loop end write to client >" + currentdata + "<" );
+        check();
         res.write(finalmsg);
+        lasttimestamp = new Date();
         currentdata = '';
         newdataflag = false;
      }
@@ -69,7 +111,7 @@ app.get('/events', function(req, res) {
 async function waitForMessage(client, topic) {
   return new Promise((resolve) => {
     const messageHandler = (t, message) => {
-      console.log('waitForMessage', t, message );
+      logger.info('waitForMessage', t, message );
       if (t === topic) {
         resolve(message.toString());
         client.off('message', messageHandler); // listener is off
@@ -88,14 +130,16 @@ async function run_i() {
   const client = await mqtt.connect(BROKER_URL);
   
   await client.subscribe(subscription, 0);
-  console.log('run function subscribed and waiting for message...');
+  logger.info('run_i function subscribed and waiting for message...');
 
   while (true) {
      const message = await waitForMessage(client, subscription);
      currentdata = message;
-     console.log('interpret function Received message: ' +  message );
+     logger.info('run_i received message: >' +  message + '<');
      newdataflag = true;
   }
+
+  logger.info('run_i ending  >' +  message + '<');
   // Clean up
   await client.end();
 }
@@ -107,22 +151,22 @@ async function run_t() {
   
   await client.subscribe(subscription, 0);
 
-  console.log('run function subscribed and waiting for message...');
+  logger.info('run_t function subscribed and waiting for message...');
   // loop for listening for messages
   while (true) {
      const message = await waitForMessage(client, subscription);
-     console.log('run telegraph function Received message: ' +  message);
+     logger.info('run_t received message: >' +  message + '<');
      currentdata = message;
-     console.log('run_t currentdata ' + currentdata );
      newdataflag = true;
   }
 
+  logger.info('run_t ending  >' +  message + '<');
   // Clean up
   await client.end();
 }
 
 function publish(dest, topic, message) {
-    console.log( 'nginx publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
+    logger.info( 'nginx publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
     client = mqtt.connect( 'mqtt://' + dest + ':1883' );
     client.publish( topic, message, (err) => {
         if (err) {
@@ -132,14 +176,14 @@ function publish(dest, topic, message) {
     });
 
     currentdata = message;
-    console.log('publish currentdata ' + currentdata );
+    logger.info('publish currentdata ' + currentdata );
     newdataflag = true;
     return true;
 }
 
 
 app.get('/', (req, res) => {
-  console.log('normal app.get / ' )
+  logger.info('normal app.get / ' )
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
@@ -148,15 +192,15 @@ app.get('/', (req, res) => {
 app.post('/submit-form', (req, res) => {
     const message = req.body.textField; // Get the data from the text field
     selected_dests = req.body.destination; // selected dest
-    console.log( selected_dests )
+    logger.info( selected_dests )
     destinations = ['127.0.0.1']
 
     if ( selected_dests !== undefined ) {
            destinations = destinations.concat( selected_dests );
     }
     destinations = [...new Set(destinations) ];
-    console.log( 'app.post destinations ' + destinations );
-    console.log( 'app.post message is ' + message );
+    logger.info( 'app.post destinations ' + destinations );
+    logger.info( 'app.post message is ' + message );
 
     topic = 'telegraph' ;
     currentdata = message;
@@ -174,6 +218,6 @@ run_t().catch(console.error);
 run_i().catch(console.error);
 
 const server = app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  logger.info(`Server is running on http://localhost:${PORT}`);
 });
 server.keepAliveTimeout = 60 * 1000 + 500;
