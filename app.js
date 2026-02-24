@@ -69,18 +69,22 @@ app.get('/events', function(req, res) {
     'Connection': 'keep-alive'
     });
 
-    newdataflag = true;  // refresh on reload
+    function update() {
+       finalmsg = makemsg( telegram );
+       logger.info("app2 open update client " + counter );
+       res.write(finalmsg);
+       lasttimestamp = new Date();
+       newdataflag = false;
+    }
+
+    update();
 
     const resloop = () => {
       if (newdataflag) {
         counter = counter + 1
         if (telegram != '' ) {
              check();
-             finalmsg = makemsg( telegram );
-             logger.info("app2 loop write to client " + counter );
-             res.write(finalmsg);
-             lasttimestamp = new Date();
-             newdataflag = false;
+             update();
           }
         }
       }
