@@ -3,7 +3,6 @@ require('winston-syslog');
 const express = require('express');
 const path = require('path');
 const mqtt = require('async-mqtt');
-const WebSocket = require("ws");
 const cors = require('cors');
 const app = express();
 const PORT = 3000;
@@ -19,7 +18,7 @@ var global_res = false;
 app.use(express.urlencoded({ extended: true })); 
 app.use(express.static(path.join(__dirname, '.')));
 app.use(cors());
-
+   
 
 const logger = winston.createLogger({
   level: 'info', // Set default logging level
@@ -40,25 +39,6 @@ const logger = winston.createLogger({
 function makemsg( msg ) {
    return "data: " + msg + "\n\n";
 };
-
-async function listener(res) {
-
-    while (true) {
-      if (newdataflag) {
-        counter = counter + 1
-        if ( currentdata.trim() !== "" ) {
-           check();
-           finalmsg = makemsg( currentdata );
-           logger.info("app2 loop write to client >" + currentdata + "<  msg count: " + counter );
-           res.write(finalmsg);
-           lasttimestamp = new Date();
-        }
-        currentdata = '';
-        newdataflag = false;
-        }
-    }
-}
-
 
 
 function timestamp() {
@@ -108,7 +88,7 @@ app.get('/events', function(req, res) {
      
      // Handle client disconnection
      req.on('close', () => {
-        logger.info('req.on closed');
+        logger.info('req.on closed received');
         clearInterval(interval);
         res.end();
      });
@@ -230,6 +210,11 @@ app.post('/submit-form', (req, res) => {
     currentdata = message
     newdataflag = true
  
+});
+
+app.post('/submit-clear', (req, res) => {
+    logger.info('submit-clear');
+    res.redirect('/'); // reload
 });
 
 run_t().catch(console.error);
