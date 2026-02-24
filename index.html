@@ -35,7 +35,7 @@
     <link rel="preload" href="fonts/TelegHPLHS.otf" as="font" type="font/otf" crossorigin>
     <link rel="stylesheet"  href="style.css" >
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <meta http-equiv="refresh" content="30"> -->
+    <meta http-equiv="refresh" content="300">
     <title>Telegraph Office</title>
 </head>
 
@@ -47,6 +47,10 @@
     <form id="messageform" >
         <label for="name" style="font-family: Telegram HPLHS" >Telegraph Message</label>
         <textarea rows = "10" id="displaytext" name="textvalue" readonly ></textarea>
+    </form>
+
+    <form class="container" id="clearform" action="/submit-clear" method="POST">
+        <button type="submit">Clear Telegram</button>
     </form>
 
     <!-- The form sends a POST request to the /submit-form route -->
