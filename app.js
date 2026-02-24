@@ -69,6 +69,8 @@ app.get('/events', function(req, res) {
     'Connection': 'keep-alive'
     });
 
+    newdataflag = true;  // refresh on reload
+
     const resloop = () => {
       if (newdataflag) {
         counter = counter + 1
