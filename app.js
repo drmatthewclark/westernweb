@@ -9,15 +9,17 @@ const app = express();
 const PORT = 3000;
 const BROKER_URL = 'mqtt://127.0.0.1:1883'; 
 
-app.use(express.urlencoded({ extended: true })); 
-app.use(express.static(path.join(__dirname, '.')));
-app.use(cors());
-
 var counter = 0
 var currentdata = ' ';
 var newdataflag = false;
 var timestampinterval = 5 * 60 * 1000; // interval between stamps
 var lasttimestamp = new Date() - timestampinterval*2; // set so it has expired
+var global_res = false;
+
+app.use(express.urlencoded({ extended: true })); 
+app.use(express.static(path.join(__dirname, '.')));
+app.use(cors());
+
 
 const logger = winston.createLogger({
   level: 'info', // Set default logging level
@@ -38,6 +40,25 @@ const logger = winston.createLogger({
 function makemsg( msg ) {
    return "data: " + msg + "\n\n";
 };
+
+async function listener(res) {
+
+    while (true) {
+      if (newdataflag) {
+        counter = counter + 1
+        if ( currentdata.trim() !== "" ) {
+           check();
+           finalmsg = makemsg( currentdata );
+           logger.info("app2 loop write to client >" + currentdata + "<  msg count: " + counter );
+           res.write(finalmsg);
+           lasttimestamp = new Date();
+        }
+        currentdata = '';
+        newdataflag = false;
+        }
+    }
+}
+
 
 
 function timestamp() {
@@ -83,14 +104,11 @@ app.get('/events', function(req, res) {
         }
       }
 
-      const interval = setInterval( () => {
-           resloop();
-      }, 500 );
-
-
+      const interval = setInterval( resloop, 500 );
      
      // Handle client disconnection
      req.on('close', () => {
+        logger.info('req.on closed');
         clearInterval(interval);
         res.end();
      });
