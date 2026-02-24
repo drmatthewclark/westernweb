@@ -14,12 +14,14 @@
     source.onmessage = function(event) {
         let vf = document.getElementById('displaytext');
         let data = event.data.toUpperCase();
+        if (data !== " " ) {
         console.log('onmessage  got >' + data + '<'  ) ;
         if (data === "AA") { data = "\n" };
         data = data.replaceAll(" AA ", "\n" );
         let messageString = sessionStorage.getItem("messageString") + " " +  data;
         sessionStorage.setItem("messageString", messageString);
         vf.value = messageString;
+        }
     }
 
   } else {
@@ -51,10 +53,7 @@
     <form class="container" id="selectform" action="/submit-form" method="POST">
          <label for="destination">Choose destinations (hold Ctrl/Cmd to select multiple):</label>
          <select class="select" name="destination" id="destination" size=3 multiple>
-           <option value="127.0.0.1" selected="true">Local line</option>
-           <option value="192.168.20.127">Philadelphia station</option>
-           <option value="71.225.110.58">Wayne station</option>
-        </select>
+         </select>
 
         <label for="textField" style="font-family: Telegram HPLHS"><br>Enter Text:</label>
         <input type="text" id="textField" name="textField" required>
@@ -63,3 +62,38 @@
 
 </body>  
 </html>
+
+
+<script>
+  const selbox = document.getElementById("destination");
+  const storedSelections = JSON.parse(localStorage.getItem('multiSelectSelections')) || [];
+
+  fetch('./entries.json')
+              .then( response => response.json() )
+              .then( entries  => { 
+             
+               for (i = 0; i < entries.length; i++) {
+                    item = entries[i];
+                    const option = document.createElement("OPTION");
+                    option.innerHTML = item.label;
+                    option.value = item.address;
+                    
+                    storedSelections.forEach(value => {
+                       if (value == option.value) {
+                          option.selected = true;
+                       }
+                    });
+                    selbox.appendChild(option);
+               };
+             }
+
+             
+   );
+
+    // Save selections on change event
+    selbox.addEventListener('change', () => {
+        const selectedValues = Array.from(selbox.selectedOptions).map(option => option.value);
+        localStorage.setItem('multiSelectSelections', JSON.stringify(selectedValues));
+    });
+
+</script>
