@@ -50,7 +50,7 @@
     <!-- The form sends a POST request to the /submit-form route -->
     <form class="container" id="selectform" action="/submit-form" method="POST">
          <label for="destination">Choose destinations (hold Ctrl/Cmd to select multiple):</label>
-         <select class="select" name="destination" id="destination" size=3 multiple>
+         <select class="select" name="destination" id="destination" multiple>
          </select>
 
         <label for="textField" style="font-family: Telegram HPLHS"><br>Enter Text:</label>
@@ -69,7 +69,6 @@
   fetch('./entries.json')
               .then( response => response.json() )
               .then( entries  => { 
-             
                for (i = 0; i < entries.length; i++) {
                     item = entries[i];
                     const option = document.createElement("OPTION");
@@ -83,6 +82,7 @@
                     });
                     selbox.appendChild(option);
                };
+               selbox.size = entries.length;             
              }
 
              
