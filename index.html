@@ -3,9 +3,6 @@
 
 <script>
 
-  if (sessionStorage.getItem("messageString") === null) {
-      sessionStorage.setItem("messageString", "");
-  }
 
   if (!!window.EventSource) {
     console.log('start script' );
@@ -15,12 +12,9 @@
         let vf = document.getElementById('displaytext');
         let data = event.data.toUpperCase();
         if (data !== " " ) {
-        console.log('onmessage  got >' + data + '<'  ) ;
-        if (data === "AA") { data = "\n" };
-        data = data.replaceAll(" AA ", "\n" );
-        let messageString = sessionStorage.getItem("messageString") + " " +  data;
-        sessionStorage.setItem("messageString", messageString);
-        vf.value = messageString;
+            console.log('onmessage  got >' + data + '<'  ) ;
+            data = data.replaceAll(" AA ", "\n" );
+            vf.value = data;
         }
     }
 
