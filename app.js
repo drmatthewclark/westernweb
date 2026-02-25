@@ -72,7 +72,6 @@ app.get('/events', function(req, res) {
        finalmsg = makemsg( telegram );
        logger.info("app2 open update client " + counter );
        res.write(finalmsg);
-       lasttimestamp = new Date();
        newdataflag = false;
     }
 
