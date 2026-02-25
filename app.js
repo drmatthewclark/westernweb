@@ -15,7 +15,6 @@ var timestampinterval = 5 * 60 * 1000; // interval between stamps
 var lasttimestamp = 0; // set so it has expired
 var global_res = false;
 
-
 app.use(express.urlencoded({ extended: true })); 
 app.use(express.static(path.join(__dirname, '.')));
 app.use(cors());
@@ -99,12 +98,7 @@ app.get('/events', function(req, res) {
      });
 
      if (telegram.trim() !== "") {
-        logger.info( "app2.get loop end write to client" );
-        //check();
-        //finalmsg = makemsg( telegram  );
-        //res.write(finalmsg);
-        //lasttimestamp = new Date();
-        //newdataflag = false;
+        logger.info( "app2.get loop end" );
      }
 });
 
