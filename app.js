@@ -14,6 +14,8 @@ var newdataflag = false;
 var timestampinterval = 5 * 60 * 1000; // interval between stamps
 var lasttimestamp = 0; // set so it has expired
 var global_res = false;
+var pollinterval = 500; // millseconds between redraw checks
+var updateinterval = 5000; // retdraw 
 
 app.use(express.urlencoded({ extended: true })); 
 app.use(express.static(path.join(__dirname, '.')));
@@ -62,6 +64,7 @@ function check() {
 
 app.get('/events', function(req, res) {
 
+   logger.info( "app2.get start" );
    res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
@@ -70,7 +73,6 @@ app.get('/events', function(req, res) {
 
     function update() {
        finalmsg = makemsg( telegram );
-       logger.info("app2 open update client " + counter );
        res.write(finalmsg);
        newdataflag = false;
     }
@@ -87,28 +89,32 @@ app.get('/events', function(req, res) {
         }
       }
 
-      const interval = setInterval( resloop, 1500 );
+      const interval = setInterval( resloop, pollinterval );
+      const updater  = setInterval( update,  updateinterval );
      
      // Handle client disconnection
      req.on('close', () => {
-        logger.info('req.on closed received');
+        logger.info('app.get closed');
         clearInterval(interval);
+        clearInterval(updateinterval);
+        update() 
         res.end();
      });
 
-     if (telegram.trim() !== "") {
-        logger.info( "app2.get loop end" );
-     }
 });
 
 
 
 async function waitForMessage(client, topic) {
   return new Promise((resolve) => {
-    const messageHandler = (t, message) => {
-      logger.info('waitForMessage', t, message );
+
+    const messageHandler = (t, message, packet ) => {
+
       if (t === topic) {
-        resolve(message.toString());
+        // packet info cmd,retain,qos,dup,length,topic
+        message = message.toString();
+        logger.info('waitForMessage topic' +  t + " msg " +  message  );
+        resolve(message);
         client.off('message', messageHandler); // listener is off
       }
     };
