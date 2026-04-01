@@ -11,7 +11,7 @@ const BROKER_URL = 'mqtt://127.0.0.1:1883';
 var counter = 0
 var telegram = '';       // accumulated message 
 var newdataflag = false;
-var timestampinterval = 5 * 60 * 1000; // interval between stamps
+var timestampinterval = 30 * 1000; // interval between stamps millisecs
 var lasttimestamp = 0; // set so it has expired
 var global_res = false;
 
