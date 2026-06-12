@@ -47,9 +47,11 @@ function makemsg( msg ) {
 function timestamp() {
     var now = new Date();
     tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    monthName = now.toLocaleString('en-US', { month: 'short' });
+    day = now.getDay();
     hrs = ("0" + (now.getHours() )).slice(-2); 
     mins = ("0" + (now.getMinutes() )).slice(-2) ;
-    var result = hrs + ":" + mins  + "GMT" + now.getTimezoneOffset() ; //+ tz; offset in minutes
+    var result = day +  monthName + hrs + ":" + mins  + "GMT" + now.getTimezoneOffset() ; //+ tz; offset in minutes
     return result.trim() + " ";
 }
 
@@ -173,9 +175,10 @@ async function run_t() {
   await client.end();
 }
 
+
 function publish(dest, topic, message) {
     logger.info( 'app publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
-    client = mqtt.connect( 'mqtt://' + dest + ':1883' );
+    client = mqtt.connect( 'mqtt://' + dest );
 
     client.publish( topic, message, (err) => {
         if (err) {
@@ -223,7 +226,7 @@ app.post('/submit-form', (req, res) => {
 
 app.post('/submit-clear', (req, res) => {
     logger.info('submit-clear');
-    telegram = '';
+    telegram = timestamp();
     lasttimestamp = 0;
     res.redirect('/'); // reload
 });
