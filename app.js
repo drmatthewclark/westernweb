@@ -48,7 +48,7 @@ function timestamp() {
     var now = new Date();
     tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     monthName = now.toLocaleString('en-US', { month: 'short' });
-    day = now.getDay();
+    day = now.getDate();
     hrs = ("0" + (now.getHours() )).slice(-2); 
     mins = ("0" + (now.getMinutes() )).slice(-2) ;
     var result = day +  monthName + hrs + ":" + mins  + "GMT" + now.getTimezoneOffset() ; //+ tz; offset in minutes
