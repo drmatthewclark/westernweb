@@ -1,0 +1,33 @@
+<html lang="en"
+<head>
+<title>Configuration</title>
+</head>
+<body>
+<script>
+
+var textFile = readFile( "/usr/local/rpi_telegraph/config.py", "t" );
+print( "The value of textFile is: " + textFile );
+
+var f = document.createElement("form");
+f.setAttribute('method',"post");
+f.setAttribute('action',"submit.php");
+
+var i = document.createElement("input"); //input element, text
+i.setAttribute('type',"text");
+i.setAttribute('name',"username");
+var s = document.createElement("input"); //input element, Submit button
+s.setAttribute('type',"submit");
+s.setAttribute('value',"Submit");
+
+f.appendChild(i);
+f.appendChild(s);
+
+document.getElementsByTagName('body')[0].appendChild(f);
+
+</script>
+
+
+</body>
+</html>
+
+

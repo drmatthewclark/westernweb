@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const mqtt = require('async-mqtt');
 const cors = require('cors');
+const fs = require('fs');
 const app = express();
 const PORT = 3000;
 const BROKER_URL = 'mqtt://127.0.0.1:1883'; 
@@ -16,6 +17,7 @@ var lasttimestamp = 0; // set so it has expired
 var global_res = false;
 var pollinterval = 500; // millseconds between redraw checks
 var updateinterval = 5000; // retdraw 
+const save_file = 'telegram-saved.txt'
 
 app.use(express.urlencoded({ extended: true })); 
 app.use(express.static(path.join(__dirname, '.')));
@@ -38,6 +40,10 @@ const logger = winston.createLogger({
 });
 
 
+function updatetelegram( msg ) {
+    telegram += msg
+}
+
 // make a SSE mesage from the data
 function makemsg( msg ) {
    return "data: " + telegram + "\n\n";
@@ -59,8 +65,9 @@ function check() {
      let now = new Date();
      if ( (now - lasttimestamp) > timestampinterval ) {
         logger.info('adding timestamp ' + timestamp() );
-        telegram += ' AA ' + timestamp(); // AA is newline prosign
+        updatetelegram(' AA ' + timestamp() ); // AA is newline prosign
         lasttimestamp = now;
+        fs.writeFileSync(save_file, telegram, 'utf-8' );
      }
 };
 
@@ -143,7 +150,7 @@ async function run_i() {
         message = " " + message;
      }
      lastletter = now;
-     telegram += message;
+     updatetelegram( message );
      newdataflag = true;
      logger.info('run_i received message: >' +  message + '<');
   }
@@ -166,7 +173,7 @@ async function run_t() {
      if (message != ''){
         check();
         logger.info('run_t received message: >' +  message + '<');
-        telegram += " " + message;
+        updatetelegram( " " + message );
         newdataflag = true;
      }
   }
@@ -237,4 +244,10 @@ run_i().catch(console.error);
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on http://localhost:${PORT}`);
 });
+
+try {
+  telegram = fs.readFileSync(save_file, 'utf8');
+} catch (err) {
+  logger.error(err);
+}
 server.keepAliveTimeout = 60 * 1000 + 500;
