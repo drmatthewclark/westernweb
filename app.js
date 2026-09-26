@@ -7,6 +7,7 @@ const cors = require('cors');
 const app = express();
 const PORT = 3000;
 const BROKER_URL = 'mqtt://127.0.0.1:1883'; 
+const SERVER_URL = 'mqtt://drmatthewclark.com:1883';
 
 var counter = 0
 var telegram = '';       // accumulated message 
@@ -167,6 +168,30 @@ async function run_t() {
   await client.end();
 }
 
+async function run_s() {
+
+  const subscription  = 'telegraph';
+  const client = await mqtt.connect(SERVER_URL);
+
+  await client.subscribe(subscription, 0);
+
+  logger.info('run_s function subscribed and waiting for message...');
+  // loop for listening for messages
+  while (true) {
+     const message = await waitForMessage(client, subscription);
+     if (message != ''){
+        check();
+        logger.info('run_s received message: >' +  message + '<');
+        telegram += " " + message;
+        newdataflag = true;
+     }
+  }
+
+  logger.info('run_s ending  >' +  message + '<');
+  await client.end();
+}
+
+
 function publish(dest, topic, message) {
     logger.info( 'app publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
     client = mqtt.connect( 'mqtt://' + dest + ':1883' );
@@ -222,8 +247,9 @@ app.post('/submit-clear', (req, res) => {
     res.redirect('/'); // reload
 });
 
-run_t().catch(console.error);
+//run_t().catch(console.error);
 run_i().catch(console.error);
+run_s().catch(console.error);
 
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on http://localhost:${PORT}`);
