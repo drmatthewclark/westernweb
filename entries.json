@@ -1,8 +1,8 @@
 [
-{"address": "127.0.0.1", "label": "local" }, 
-{"address": "drmatthewclark.com", "label": "Network" }, 
-{"address": "192.168.20.115", "label": "Office station" }, 
-{"address": "192.168.20.127", "label": "Philadelphia station" },
-{"address": "192.168.20.24", "label": "Relay station" },
-{"address": "71.225.110.58", "label": "Wayne station" }
+{"address": "local", "label": "local" },
+{"address": "", "label": "All Network" },
+{"address": "/addison telegraph", "label": "Office station" },
+{"address": "/Waverly desk", "label": "Waverly station" },
+{"address": "/telegraph3", "label": "Relay station" },
+{"address": "/sounder", "label": "WU 3E sounder" }
 ]

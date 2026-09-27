@@ -194,7 +194,8 @@ async function run_s() {
 
 function publish(dest, topic, message) {
     logger.info( 'app publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
-    client = mqtt.connect( 'mqtt://' + dest + ':1883' );
+    //client = mqtt.connect( 'mqtt://' + dest + ':1883' );
+    client = mqtt.connect( dest  );
 
     client.publish( topic, message, (err) => {
         if (err) {
@@ -219,7 +220,7 @@ app.post('/submit-form', (req, res) => {
     const message = " " + req.body.textField; // Get the data from the text field
     selected_dests = req.body.destination; // selected dest
     logger.info( selected_dests )
-    destinations = ['127.0.0.1']
+    destinations = []
 
     if ( selected_dests !== undefined ) {
            destinations = destinations.concat( selected_dests );
@@ -231,10 +232,15 @@ app.post('/submit-form', (req, res) => {
     topic = 'telegraph';
 
     for (const dest of destinations) {
-       publish(dest, topic, message );
+       if ( dest == 'local' ) {
+         publish(BROKER_URL, 'telegraph', message );
+       } else {
+         publish(SERVER_URL, 'telegraph' + dest , message );
+       }
     }
 
-    //telegram += message;
+    check()
+    telegram += message;
     newdataflag = true
     res.redirect('/'); // reload
  
