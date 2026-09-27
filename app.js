@@ -5,6 +5,7 @@ const path = require('path');
 const mqtt = require('async-mqtt');
 const cors = require('cors');
 const app = express();
+const fs = require('fs')
 const PORT = 3000;
 const BROKER_URL = 'mqtt://127.0.0.1:1883'; 
 const SERVER_URL = 'mqtt://drmatthewclark.com:1883';
@@ -194,7 +195,7 @@ async function run_s() {
 
 function publish(dest, topic, message) {
     logger.info( 'app publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
-    //client = mqtt.connect( 'mqtt://' + dest + ':1883' );
+
     client = mqtt.connect( dest  );
 
     client.publish( topic, message, (err) => {
@@ -226,6 +227,7 @@ app.post('/submit-form', (req, res) => {
            destinations = destinations.concat( selected_dests );
     }
     destinations = [...new Set(destinations) ];
+    fs.writeFileSync('/tmp/selected_dests', destinations.join('|'));
     logger.info( 'app.post destinations ' + destinations );
     logger.info( 'app.post message is ' + message );
 
@@ -253,7 +255,7 @@ app.post('/submit-clear', (req, res) => {
     res.redirect('/'); // reload
 });
 
-//run_t().catch(console.error);
+run_t().catch(console.error);
 run_i().catch(console.error);
 run_s().catch(console.error);
 
