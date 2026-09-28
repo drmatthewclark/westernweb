@@ -5,13 +5,14 @@ const path = require('path');
 const mqtt = require('async-mqtt');
 const cors = require('cors');
 const app = express();
-const fs = require('fs')
+const fs = require('fs');
 const PORT = 3000;
 const BROKER_URL = 'mqtt://127.0.0.1:1883'; 
 const SERVER_URL = 'mqtt://drmatthewclark.com:1883';
+const saved_data = '/var/www/telegram-saved.txt';
 
-var counter = 0
-var telegram = '';       // accumulated message 
+var counter = 0;
+var telegram =  fs.readFileSync(saved_data, 'utf8').trim(); ;       // accumulated message 
 var newdataflag = false;
 var timestampinterval = 30 * 1000; // interval between stamps millisecs
 var lasttimestamp = 0; // set so it has expired
@@ -40,7 +41,8 @@ const logger = winston.createLogger({
 
 // make a SSE mesage from the data
 function makemsg( msg ) {
-   return "data: " + telegram + "\n\n";
+   save();
+   return "data: " + msg  + "\n\n";
 };
 
 
@@ -64,6 +66,7 @@ function check() {
 
 app.get('/events', function(req, res) {
 
+
    res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
@@ -85,6 +88,7 @@ app.get('/events', function(req, res) {
         if (telegram != '' ) {
              check();
              update();
+             save();
           }
         }
       }
@@ -192,6 +196,15 @@ async function run_s() {
   await client.end();
 }
 
+function save() {
+    fs.writeFile(saved_data, telegram, err => {
+      if (err) {
+          logger.info('error saving ' + saved_data + ' ' + err )
+      } else {
+          logger.info('saved ' + saved_data )
+      }
+    } );
+}
 
 function publish(dest, topic, message) {
     logger.info( 'app publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
@@ -254,6 +267,7 @@ app.post('/submit-clear', (req, res) => {
     lasttimestamp = 0;
     res.redirect('/'); // reload
 });
+
 
 run_t().catch(console.error);
 run_i().catch(console.error);
