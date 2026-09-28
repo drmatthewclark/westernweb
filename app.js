@@ -11,6 +11,8 @@ const SERVER_URL = 'mqtt://drmatthewclark.com:1883'; // mqtt broker
 const saved_data = '/var/www/telegram-saved.txt';    // remembers content between restarts
 const local_name_file = '/usr/local/rpi_telegraph/local_name'  // storing the topic name for this device
 const local_name = fs.readFileSync(local_name_file, 'utf8').trim();  // local name for specific topic
+const qos = 0;  // mqtt qos
+const password = local_name + '-t7f+&0mE9wg,_?D`';  // mosquitto password
 const wordspace_timing = 3000  // delay to make a work space using telegraph key
 
 var counter = 0;
@@ -129,7 +131,7 @@ async function waitForMessage(client, topic) {
 async function run_i() {
 
   const subscription  = 'interpret';
-  const client = await mqtt.connect(SERVER_URL);
+  const client = await mqtt.connect(SERVER_URL, {username: local_name, password: password, qos = qos} );
   lastletter = 0 
   await client.subscribe(subscription, 0);
   logger.info('run_i function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
@@ -154,7 +156,7 @@ async function run_i() {
 async function run_t() {
 
   const subscription  = 'telegraph';
-  const client = await mqtt.connect(SERVER_URL);
+  const client = await mqtt.connect(SERVER_URL, {username: local_name, password: password, qos = qos});
   
   await client.subscribe(subscription, 0);
 
@@ -177,7 +179,7 @@ async function run_t() {
 async function run_s() {
 
   const subscription  = 'telegraph/' + local_name;
-  const client = await mqtt.connect(SERVER_URL);
+  const client = await mqtt.connect(SERVER_URL, {username: local_name, password: password, qos = qos});
   lastletter = 0
   await client.subscribe(subscription, 0);
 
@@ -216,7 +218,7 @@ function save() {  // save telegram to file
 function publish(dest, topic, message) {
     logger.info( 'app publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
 
-    client = mqtt.connect( dest  );
+    client = mqtt.connect( dest, {username: local_name, password: password, qos = qos}  );
 
     client.publish( topic, message, (err) => {
         if (err) {
