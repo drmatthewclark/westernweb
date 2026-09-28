@@ -9,9 +9,11 @@ const fs = require('fs');
 const PORT = 3000;
 const SERVER_URL = 'mqtt://drmatthewclark.com:1883';
 const saved_data = '/var/www/telegram-saved.txt';
+const local_name_file = '/usr/share/rpi_telegraph/local_name'
+const local_name = fs.readFileSync(local_name_file, 'utf8').trim();  // local name for specific topic
 
 var counter = 0;
-var telegram =  fs.readFileSync(saved_data, 'utf8').trim(); ;       // accumulated message 
+var telegram =  fs.readFileSync(saved_data, 'utf8').trim();       // accumulated message 
 var newdataflag = false;
 var timestampinterval = 30 * 1000; // interval between stamps millisecs
 var lasttimestamp = 0; // set so it has expired
@@ -87,7 +89,6 @@ app.get('/events', function(req, res) {
         if (telegram != '' ) {
              check();
              update();
-             save();
           }
         }
       }
@@ -130,7 +131,7 @@ async function run_i() {
   const client = await mqtt.connect(SERVER_URL);
   lastletter = 0 
   await client.subscribe(subscription, 0);
-  logger.info('run_i function subscribed and waiting for message...');
+  logger.info('run_i function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
 
   while (true) {
      message = await waitForMessage(client, subscription);
@@ -156,7 +157,7 @@ async function run_t() {
   
   await client.subscribe(subscription, 0);
 
-  logger.info('run_t function subscribed and waiting for message...');
+  logger.info('run_t function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
   // loop for listening for messages
   while (true) {
      const message = await waitForMessage(client, subscription);
@@ -174,12 +175,12 @@ async function run_t() {
 
 async function run_s() {
 
-  const subscription  = 'telegraph';
+  const subscription  = 'telegraph' + local_name;
   const client = await mqtt.connect(SERVER_URL);
 
   await client.subscribe(subscription, 0);
 
-  logger.info('run_s function subscribed and waiting for message...');
+  logger.info('run_s function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
   // loop for listening for messages
   while (true) {
      const message = await waitForMessage(client, subscription);
