@@ -43,11 +43,9 @@ const logger = winston.createLogger({
   ]
 });
 
-
-logger.info('server client >' + local_name + "< pword >" + password + '<' );
 var server_client = mqtt.connect(SERVER_URL, {username: local_name, password: password, clientId: local_name + 'web'  } );
 server_client.on("connect", function() { logger.info(" mqtt connected :" + server_client.connected ) } );
-server_client.on("error",function(error){ console.log("Can't connect"+error)});
+server_client.on("error",function(error){ console.log("Can't connect "+error)});
 
 // make a SSE mesage from the data
 function makemsg( msg ) {
