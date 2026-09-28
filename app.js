@@ -7,9 +7,9 @@ const cors = require('cors');
 const app = express();
 const fs = require('fs');
 const PORT = 3000;
-const SERVER_URL = 'mqtt://drmatthewclark.com:1883';
-const saved_data = '/var/www/telegram-saved.txt';
-const local_name_file = '/usr/share/rpi_telegraph/local_name'
+const SERVER_URL = 'mqtt://drmatthewclark.com:1883'; // mqtt broker
+const saved_data = '/var/www/telegram-saved.txt';    // remembers content between restarts
+const local_name_file = '/usr/local/rpi_telegraph/local_name'  // storing the topic name for this device
 const local_name = fs.readFileSync(local_name_file, 'utf8').trim();  // local name for specific topic
 
 var counter = 0;
@@ -137,7 +137,7 @@ async function run_i() {
      message = await waitForMessage(client, subscription);
      check();
      now = new Date();
-     if ((now - lastletter) > 3000) {  // space between words time in milliseconds
+     if ((now - lastletter) > 3000) {  // space between words time in milliseconds add word space
         message = " " + message;
      }
      lastletter = now;
@@ -175,7 +175,7 @@ async function run_t() {
 
 async function run_s() {
 
-  const subscription  = 'telegraph' + local_name;
+  const subscription  = 'telegraph/' + local_name;
   const client = await mqtt.connect(SERVER_URL);
 
   await client.subscribe(subscription, 0);
@@ -196,7 +196,7 @@ async function run_s() {
   await client.end();
 }
 
-function save() {
+function save() {  // save telegram to file
     fs.writeFile(saved_data, telegram, err => {
       if (err) {
           logger.info('error saving ' + saved_data + ' ' + err )
@@ -240,18 +240,16 @@ app.post('/submit-form', (req, res) => {
            destinations = destinations.concat( selected_dests );
     }
     destinations = [...new Set(destinations) ];
-    fs.writeFileSync('/tmp/selected_dests', destinations.join('|'));
-    logger.info( 'app.post destinations ' + destinations );
-    logger.info( 'app.post message is ' + message );
+    fs.writeFileSync('/tmp/selected_dests', destinations.join('|')); // remember for the telegraph listener
 
     topic = 'telegraph';
 
     for (const dest of destinations) {
-       if ( dest == 'local' ) {
-         publish(SERVER_URL, 'telegraph', message );
-       } else {
-         publish(SERVER_URL, 'telegraph' + dest , message );
-       }
+         if (dest == 'local') {
+            dest = '/' + local_name
+         } 
+         publish(SERVER_URL, topic  + dest , message );
+         logger.info( 'app.post destination ' + topic + dest + ' msg:' + message  );
     }
 
     check()
