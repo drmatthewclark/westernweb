@@ -7,7 +7,6 @@ const cors = require('cors');
 const app = express();
 const fs = require('fs');
 const PORT = 3000;
-const BROKER_URL = 'mqtt://127.0.0.1:1883'; 
 const SERVER_URL = 'mqtt://drmatthewclark.com:1883';
 const saved_data = '/var/www/telegram-saved.txt';
 
@@ -128,7 +127,7 @@ async function waitForMessage(client, topic) {
 async function run_i() {
 
   const subscription  = 'interpret';
-  const client = await mqtt.connect(BROKER_URL);
+  const client = await mqtt.connect(SERVER_URL);
   lastletter = 0 
   await client.subscribe(subscription, 0);
   logger.info('run_i function subscribed and waiting for message...');
@@ -153,7 +152,7 @@ async function run_i() {
 async function run_t() {
 
   const subscription  = 'telegraph';
-  const client = await mqtt.connect(BROKER_URL);
+  const client = await mqtt.connect(SERVER_URL);
   
   await client.subscribe(subscription, 0);
 
@@ -248,7 +247,7 @@ app.post('/submit-form', (req, res) => {
 
     for (const dest of destinations) {
        if ( dest == 'local' ) {
-         publish(BROKER_URL, 'telegraph', message );
+         publish(SERVER_URL, 'telegraph', message );
        } else {
          publish(SERVER_URL, 'telegraph' + dest , message );
        }
