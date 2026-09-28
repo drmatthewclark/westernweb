@@ -12,7 +12,7 @@ const saved_data = '/var/www/telegram-saved.txt';    // remembers content betwee
 const local_name_file = '/usr/local/rpi_telegraph/local_name'  // storing the topic name for this device
 const local_name = fs.readFileSync(local_name_file, 'utf8').trim();  // local name for specific topic
 const qos = 0;  // mqtt qos
-const password = local_name + '-t7f+&0mE9wg,_?D`';  // mosquitto password
+const password = local_name + '-t7f+&0mE9wg,_?D';  // mosquitto password
 const wordspace_timing = 3000  // delay to make a work space using telegraph key
 
 var counter = 0;
@@ -26,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '.')));
 app.use(cors());
    
+
 
 const logger = winston.createLogger({
   level: 'info', // Set default logging level
@@ -42,6 +43,11 @@ const logger = winston.createLogger({
   ]
 });
 
+
+logger.info('server client >' + local_name + "< pword >" + password + '<' );
+var server_client = mqtt.connect(SERVER_URL, {username: local_name, password: password, clientId: local_name + 'web'  } );
+server_client.on("connect", function() { logger.info(" mqtt connected :" + server_client.connected ) } );
+server_client.on("error",function(error){ console.log("Can't connect"+error)});
 
 // make a SSE mesage from the data
 function makemsg( msg ) {
@@ -131,13 +137,13 @@ async function waitForMessage(client, topic) {
 async function run_i() {
 
   const subscription  = 'interpret';
-  const client = await mqtt.connect(SERVER_URL, {username: local_name, password: password, qos = qos} );
+  const client = server_client;
   lastletter = 0 
   await client.subscribe(subscription, 0);
   logger.info('run_i function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
 
   while (true) {
-     message = await waitForMessage(client, subscription);
+     var message = await waitForMessage(client, subscription);
      check();
      now = new Date();
      if ((now - lastletter) > wordspace_timing) {  // space between words time in milliseconds add word space
@@ -156,14 +162,13 @@ async function run_i() {
 async function run_t() {
 
   const subscription  = 'telegraph';
-  const client = await mqtt.connect(SERVER_URL, {username: local_name, password: password, qos = qos});
-  
+  const client = server_client;
   await client.subscribe(subscription, 0);
 
   logger.info('run_t function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
   // loop for listening for messages
   while (true) {
-     const message = await waitForMessage(client, subscription);
+     var message = await waitForMessage(client, subscription);
      if (message != ''){
         check();
         logger.info('run_t received message: >' +  message + '<');
@@ -179,14 +184,14 @@ async function run_t() {
 async function run_s() {
 
   const subscription  = 'telegraph/' + local_name;
-  const client = await mqtt.connect(SERVER_URL, {username: local_name, password: password, qos = qos});
-  lastletter = 0
+  const client = server_client;
+  lastletter = 0;
   await client.subscribe(subscription, 0);
 
   logger.info('run_s function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
   // loop for listening for messages
   while (true) {
-     const message = await waitForMessage(client, subscription);
+     var message = await waitForMessage(client, subscription);
      if (message != ''){
         check();
         // handle word space 
@@ -218,7 +223,7 @@ function save() {  // save telegram to file
 function publish(dest, topic, message) {
     logger.info( 'app publish: dest: ' + dest + ' topic: ' +topic + ' msg: ' + message )
 
-    client = mqtt.connect( dest, {username: local_name, password: password, qos = qos}  );
+    const client = server_client;
 
     client.publish( topic, message, (err) => {
         if (err) {
