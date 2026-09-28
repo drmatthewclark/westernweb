@@ -244,7 +244,7 @@ app.post('/submit-form', (req, res) => {
 
     topic = 'telegraph';
 
-    for (const dest of destinations) {
+    for (var dest of destinations ) {
          if (dest == 'local') {
             dest = '/' + local_name
          } 
