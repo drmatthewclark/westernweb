@@ -11,6 +11,7 @@ const SERVER_URL = 'mqtt://drmatthewclark.com:1883'; // mqtt broker
 const saved_data = '/var/www/telegram-saved.txt';    // remembers content between restarts
 const local_name_file = '/usr/local/rpi_telegraph/local_name'  // storing the topic name for this device
 const local_name = fs.readFileSync(local_name_file, 'utf8').trim();  // local name for specific topic
+const wordspace_timing = 3000  // delay to make a work space using telegraph key
 
 var counter = 0;
 var telegram =  fs.readFileSync(saved_data, 'utf8').trim();       // accumulated message 
@@ -137,7 +138,7 @@ async function run_i() {
      message = await waitForMessage(client, subscription);
      check();
      now = new Date();
-     if ((now - lastletter) > 3000) {  // space between words time in milliseconds add word space
+     if ((now - lastletter) > wordspace_timing) {  // space between words time in milliseconds add word space
         message = " " + message;
      }
      lastletter = now;
@@ -177,7 +178,7 @@ async function run_s() {
 
   const subscription  = 'telegraph/' + local_name;
   const client = await mqtt.connect(SERVER_URL);
-
+  lastletter = 0
   await client.subscribe(subscription, 0);
 
   logger.info('run_s function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
@@ -186,9 +187,15 @@ async function run_s() {
      const message = await waitForMessage(client, subscription);
      if (message != ''){
         check();
-        logger.info('run_s received message: >' +  message + '<');
-        telegram += " " + message;
+        // handle word space 
+        now = new Date();
+        if ((now - lastletter) > wordspace_timing) {  // space between words time in milliseconds add word space
+            message = " " + message;
+        }
+        lastletter = now;
+        telegram += message;
         newdataflag = true;
+        logger.info('run_s received message: >' +  message + '<');
      }
   }
 
