@@ -13,7 +13,7 @@ const local_name_file = '/usr/local/rpi_telegraph/local_name'  // storing the to
 const local_name = fs.readFileSync(local_name_file, 'utf8').trim();  // local name for specific topic
 const qos = 0;  // mqtt qos
 const password = local_name + '-t7f+&0mE9wg,_?D';  // mosquitto password
-const wordspace_timing = 3000  // delay to make a work space using telegraph key
+const wordspace_timing = 3000  // delay to make a word space using telegraph key
 
 var counter = 0;
 var telegram =  fs.readFileSync(saved_data, 'utf8').trim();       // accumulated message 
@@ -120,7 +120,7 @@ async function waitForMessage(client, topic) {
   return new Promise((resolve) => {
     const messageHandler = (t, message) => {
       logger.info('waitForMessage', t, message );
-      if (t === topic) {
+      if (topic.includes(t)) {
         resolve(message.toString());
         client.off('message', messageHandler); // listener is off
       }
@@ -132,45 +132,30 @@ async function waitForMessage(client, topic) {
 
 
 
-async function run_i() {
-
-  const subscription  = 'interpret';
-  const client = server_client;
-  lastletter = 0 
-  await client.subscribe(subscription, 0);
-  logger.info('run_i function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
-
-  while (true) {
-     var message = await waitForMessage(client, subscription);
-     check();
-     now = new Date();
-     if ((now - lastletter) > wordspace_timing) {  // space between words time in milliseconds add word space
-        message = " " + message;
-     }
-     lastletter = now;
-     telegram += message;
-     newdataflag = true;
-     logger.info('run_i received message: >' +  message + '<');
-  }
-
-  logger.info('run_i ending  >' +  message + '<');
-  await client.end();
-}
-
 async function run_t() {
 
-  const subscription  = 'telegraph';
+  const subscription  = ['telegraph', 'telegraph/' + local_name,  'interpret' ];
   const client = server_client;
   await client.subscribe(subscription, 0);
+  lastletter = 0;
+ 
+  logger.info('run_t function subscribed to ' + SERVER_URL + ' ' + subscription.join(',') + '  and waiting for message...');
 
-  logger.info('run_t function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
   // loop for listening for messages
   while (true) {
      var message = await waitForMessage(client, subscription);
-     if (message != ''){
+     console.log( 'run_t received message: >' +  message + '<' );
+     logger.info('run_t received message: >' +  message + '<');
+     if (message != '') {
         check();
-        logger.info('run_t received message: >' +  message + '<');
-        telegram += " " + message;
+        now = Date();
+        if ((now - lastletter) > wordspace_timing) {  // space between words time in milliseconds add word space
+            message = " " + message;
+            logger.info('adding space gap is: ' + (now - lastletter));
+        }
+        lastletter = now;
+        telegram += message;
+        logger.info(message + ':  telegram is ' + telegram);
         newdataflag = true;
      }
   }
@@ -179,34 +164,6 @@ async function run_t() {
   await client.end();
 }
 
-async function run_s() {
-
-  const subscription  = 'telegraph/' + local_name;
-  const client = server_client;
-  lastletter = 0;
-  await client.subscribe(subscription, 0);
-
-  logger.info('run_s function subscribed to ' + SERVER_URL + ' ' + subscription + '  and waiting for message...');
-  // loop for listening for messages
-  while (true) {
-     var message = await waitForMessage(client, subscription);
-     if (message != ''){
-        check();
-        // handle word space 
-        now = new Date();
-        if ((now - lastletter) > wordspace_timing) {  // space between words time in milliseconds add word space
-            message = " " + message;
-        }
-        lastletter = now;
-        telegram += message;
-        newdataflag = true;
-        logger.info('run_s received message: >' +  message + '<');
-     }
-  }
-
-  logger.info('run_s ending  >' +  message + '<');
-  await client.end();
-}
 
 function save() {  // save telegram to file
     fs.writeFile(saved_data, telegram, err => {
@@ -278,10 +235,7 @@ app.post('/submit-clear', (req, res) => {
     res.redirect('/'); // reload
 });
 
-
 run_t().catch(console.error);
-run_i().catch(console.error);
-run_s().catch(console.error);
 
 const server = app.listen(PORT, () => {
   logger.info(`Server is running on http://localhost:${PORT}`);

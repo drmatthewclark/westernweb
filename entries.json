@@ -1,8 +1,9 @@
 [
 {"address": "local", "label": "local" },
 {"address": "", "label": "All Network" },
-{"address": "/addison", "label": "Office station" },
+{"address": "/addison", "label": "Addison station" },
 {"address": "/Waverly desk", "label": "Waverly station" },
 {"address": "/telegraph3", "label": "Relay station" },
-{"address": "/sounder", "label": "WU 3E sounder" }
+{"address": "/sounder", "label": "WU 3E sounder relay" }
+{"address": "/Wayne", "label": "Wayne station" }
 ]
