@@ -27,7 +27,6 @@ app.use(express.static(path.join(__dirname, '.')));
 app.use(cors());
    
 
-
 const logger = winston.createLogger({
   level: 'info', // Set default logging level
   transports: [
@@ -155,7 +154,6 @@ async function run_t() {
         }
         lastletter = now;
         telegram += message;
-        logger.info(message + ':  telegram is ' + telegram);
         newdataflag = true;
      }
   }
@@ -203,27 +201,32 @@ app.post('/submit-form', (req, res) => {
     const message = " " + req.body.textField; // Get the data from the text field
     selected_dests = req.body.destination; // selected dest
     logger.info( selected_dests )
-    destinations = []
+    destinations = ['/' + local_name]  // sound messages to local as well as other destinations
+    //destinations = []  // 
 
     if ( selected_dests !== undefined ) {
            destinations = destinations.concat( selected_dests );
     }
     destinations = [...new Set(destinations) ];
+
+    // uniquify
+    destinations = destinations.filter(function(elem, pos) {
+              return destinations.indexOf(elem) == pos;
+          })
+
     fs.writeFileSync('/tmp/selected_dests', destinations.join('|')); // remember for the telegraph listener
 
     topic = 'telegraph';
 
     for (var dest of destinations ) {
-         if (dest == 'local') {
-            dest = '/' + local_name
-         } 
          publish(SERVER_URL, topic  + dest , message );
          logger.info( 'app.post destination ' + topic + dest + ' msg:' + message  );
     }
 
     check()
-    telegram += message;
-    newdataflag = true
+    //telegram += message;  // the publish will make it appear?
+    logger.info('added to telegram >' + message + '<' );
+    newdataflag = true;
     res.redirect('/'); // reload
  
 });
