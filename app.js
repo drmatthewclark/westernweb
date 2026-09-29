@@ -143,14 +143,15 @@ async function run_t() {
   // loop for listening for messages
   while (true) {
      var message = await waitForMessage(client, subscription);
-     console.log( 'run_t received message: >' +  message + '<' );
      logger.info('run_t received message: >' +  message + '<');
+
      if (message != '') {
         check();
-        now = Date();
-        if ((now - lastletter) > wordspace_timing) {  // space between words time in milliseconds add word space
+        now = Date.now();
+        gap = now - lastletter;
+        if ( gap  > wordspace_timing) {  // space between words time in milliseconds add word space
             message = " " + message;
-            logger.info('adding space gap is: ' + (now - lastletter));
+            logger.info('adding space because gap is: ' + gap );
         }
         lastletter = now;
         telegram += message;
