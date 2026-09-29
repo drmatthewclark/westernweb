@@ -13,7 +13,7 @@ const local_name_file = '/usr/local/rpi_telegraph/local_name'  // storing the to
 const local_name = fs.readFileSync(local_name_file, 'utf8').trim();  // local name for specific topic
 const qos = 0;  // mqtt qos
 const password = local_name + '-t7f+&0mE9wg,_?D';  // mosquitto password
-const wordspace_timing = 3000  // delay to make a word space using telegraph key
+const wordspace_timing = 1500  // delay to make a word space using telegraph key (milliseconds)
 
 var counter = 0;
 var telegram =  fs.readFileSync(saved_data, 'utf8').trim();       // accumulated message 
