@@ -21,6 +21,7 @@ var newdataflag = false;
 var timestampinterval = 30 * 1000; // interval between stamps millisecs
 var lasttimestamp = 0; // set so it has expired
 var global_res = false;
+var server_client = false;
 
 app.use(express.urlencoded({ extended: true })); 
 app.use(express.static(path.join(__dirname, '.')));
@@ -42,9 +43,34 @@ const logger = winston.createLogger({
   ]
 });
 
-var server_client = mqtt.connect(SERVER_URL, {username: local_name, password: password, clientId: local_name + 'web'  } );
-server_client.on("connect", function() { logger.info(" mqtt connected :" + server_client.connected ) } );
-server_client.on("error",function(error){ console.log("Can't connect "+error)});
+
+function connect() {
+   if ( ! server_client.connected) {
+      server_client = mqtt.connect(SERVER_URL, {username: local_name, password: password, clientId: local_name + 'web', reconnectPeriod: 5000  } );
+   }
+};
+
+connect();
+
+server_client.on("connect",
+function() { 
+   logger.info(" mqtt connected :" + server_client.connected ) 
+}
+);
+
+server_client.on("error",
+function(error){ 
+  console.log("Can't connect "+error)
+  connect()
+  }
+);
+
+server_client.on("disconnect", 
+function(){ 
+  console.log("disconnected; reconnecting");
+  connect();
+  }
+);
 
 // make a SSE mesage from the data
 function makemsg( msg ) {
