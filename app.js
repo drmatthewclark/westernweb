@@ -84,7 +84,10 @@ function timestamp() {
     tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     hrs = ("0" + (now.getHours() )).slice(-2); 
     mins = ("0" + (now.getMinutes() )).slice(-2) ;
-    var result = hrs + ":" + mins  + "GMT" + now.getTimezoneOffset() ; //+ tz; offset in minutes
+    month = now.getMonth() + 1  // month from 0-11
+    day   = now.getDate()
+    //var result = month + "/" + day + " " + hrs + ":" + mins  + "GMT" + now.getTimezoneOffset() ; //+ tz; offset in minutes
+    var result = month + "/" + day + " " + hrs + ":" + mins; //+ tz; offset in minutes
     return result.trim() + " ";
 }
 
